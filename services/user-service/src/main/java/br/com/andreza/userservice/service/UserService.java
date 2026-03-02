@@ -17,7 +17,7 @@ public class UserService {
 
     public User create(User user) {
 
-        if (repository.existsByEmail(user.getEmail())) {
+        if (repository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email já cadastrado");
         }
 
@@ -26,5 +26,24 @@ public class UserService {
 
     public List<User> findAll() {
         return repository.findAll();
+    }
+
+    public User findById(Long id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
+    public User update(Long id, User user) {
+
+        User existing = findById(id);
+
+        existing.setName(user.getName());
+        existing.setEmail(user.getEmail());
+
+        return repository.save(existing);
+    }
+
+    public void delete(Long id) {
+        repository.deleteById(id);
     }
 }
