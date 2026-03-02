@@ -1,4 +1,4 @@
-package br.com.andreza.user_service;
+package br.com.andreza.userservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
