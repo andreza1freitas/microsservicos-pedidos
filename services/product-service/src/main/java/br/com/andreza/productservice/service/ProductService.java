@@ -17,9 +17,6 @@ public class ProductService {
         this.repository = repository;
     }
 
-    // public Product create(Product product) {
-    //     return repository.save(product);
-    // }
 
     public Product create(ProductRequestDTO dto) {
         Product product = ProductMapper.toEntity(dto);
