@@ -2,6 +2,8 @@ package br.com.andreza.productservice.service;
 
 import br.com.andreza.productservice.model.Product;
 import br.com.andreza.productservice.repository.ProductRepository;
+import br.com.andreza.productservice.dto.ProductRequestDTO;
+import br.com.andreza.productservice.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +17,14 @@ public class ProductService {
         this.repository = repository;
     }
 
-    public Product create(Product product) {
+    // public Product create(Product product) {
+    //     return repository.save(product);
+    // }
+
+    public Product create(ProductRequestDTO dto) {
+        Product product = ProductMapper.toEntity(dto);
         return repository.save(product);
-    }
+   }
 
     public List<Product> findAll() {
         return repository.findAll();
