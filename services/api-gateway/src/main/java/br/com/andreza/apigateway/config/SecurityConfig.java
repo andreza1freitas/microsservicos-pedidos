@@ -1,0 +1,36 @@
+package br.com.andreza.apigateway.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+
+@Configuration
+public class SecurityConfig {
+
+    @Bean
+    public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
+
+        return http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+
+            .authorizeExchange(exchanges -> exchanges
+
+                // Libera Auth
+                .pathMatchers("/auth/**").permitAll()
+
+                // Libera Swagger (se usar depois)
+                .pathMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+
+                // Todo resto exige token futuramente
+                .anyExchange().permitAll() // POR ENQUANTO
+            )
+
+            .build();
+    }
+}
+
