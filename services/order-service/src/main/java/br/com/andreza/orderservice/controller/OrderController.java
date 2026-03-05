@@ -21,7 +21,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public Order create(@RequestBody @Valid OrderRequestDTO dto) {
+    public OrderResponseDTO create(@RequestBody @Valid OrderRequestDTO dto) {
 
         Order order = new Order();
         order.setUserId(dto.getUserId());
@@ -31,21 +31,52 @@ public class OrderController {
                 OrderItem item = new OrderItem();
                 item.setProductId(i.getProductId());
                 item.setQuantity(i.getQuantity());
-                item.setPrice(BigDecimal.valueOf(100)); // provisório
                 return item;
             }).collect(Collectors.toList());
+        
+        Order savedOrder = service.create(order,  items);
 
-        return service.create(order, items);
+        return convertToDTO(savedOrder);
     }
 
     @GetMapping
-    public List<Order> findAll() {
-        return service.findAll();
+    public List<OrderResponseDTO> findAll() {
+        return service.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public Order findById(@PathVariable Long id) {
-        return service.findById(id);
+    public OrderResponseDTO findById(@PathVariable Long id) {
+        Order order = service.findById(id);
+
+        return convertToDTO(order);
+    }
+    
+    private OrderResponseDTO convertToDTO(Order order) {
+
+        OrderResponseDTO dto = new OrderResponseDTO();
+
+        dto.setId(order.getId());
+        dto.setUserId(order.getUserId());
+        dto.setTotal(order.getTotal());
+        dto.setStatus(order.getStatus());
+        dto.setCreatedAt(order.getCreatedAt());
+
+        List<OrderItemRequestDTO> items = order.getItems()
+                .stream()
+                .map(item -> {
+                    OrderItemRequestDTO i = new OrderItemRequestDTO();
+                    i.setProductId(item.getProductId());
+                    i.setQuantity(item.getQuantity());
+                    return i;
+                })
+                .collect(Collectors.toList());
+
+        dto.setItems(items);
+
+        return dto;
     }
 }
 

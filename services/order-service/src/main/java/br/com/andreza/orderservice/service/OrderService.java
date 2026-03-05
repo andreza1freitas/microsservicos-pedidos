@@ -3,6 +3,12 @@ package br.com.andreza.orderservice.service;
 import br.com.andreza.orderservice.model.*;
 import br.com.andreza.orderservice.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.andreza.orderservice.client.ProductClient;
+import br.com.andreza.orderservice.client.UserClient;
+import br.com.andreza.orderservice.dto.ProductResponseDTO;
+import br.com.andreza.orderservice.dto.UserResponseDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,37 +19,62 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository itemRepository;
+    private final ProductClient productClient;
+    private final UserClient userClient;
 
     public OrderService(OrderRepository orderRepository,
-                        OrderItemRepository itemRepository) {
+                        OrderItemRepository itemRepository,
+                        ProductClient productClient,
+                        UserClient userClient) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
+        this.productClient = productClient;
+        this.userClient = userClient;
+        
     }
 
+    @Transactional
     public Order create(Order order, List<OrderItem> items) {
+
+        // Validar usuário
+        UserResponseDTO user = userClient.getUserById(order.getUserId());
+
+        if (user == null) {
+            throw new RuntimeException("Usuário não encontrado");
+        }
 
         order.setStatus("CREATED");
         order.setCreatedAt(LocalDateTime.now());
 
-        Order savedOrder = orderRepository.save(order);
-
         BigDecimal total = BigDecimal.ZERO;
 
         for (OrderItem item : items) {
-            item.setOrder(savedOrder);
+
+            // Buscar produto
+            ProductResponseDTO product =
+                productClient.getProductById(item.getProductId());
+
+            if (product == null) {
+                throw new RuntimeException("Produto não encontrado");
+            }
+
+            // usar preço real do produto
+            item.setPrice(product.price());
+
+            item.setOrder(order);
 
             total = total.add(
                 item.getPrice().multiply(
                     BigDecimal.valueOf(item.getQuantity())
                 )
             );
-
-            itemRepository.save(item);
         }
 
-        savedOrder.setTotal(total);
+        order.setTotal(total);
+        order.setItems(items);
+        
 
-        return orderRepository.save(savedOrder);
+        return orderRepository.save(order);
     }
 
     public List<Order> findAll() {
